@@ -59,9 +59,77 @@ normalise_postcodes <- function(codes) {
 #' [NSW](https://www.spatial.nsw.gov.au/surveying/geodesy/gda2020).
 #' Geospatial data in this package uses GDA2020.
 #'
+#' `crs_gda2020` is EPSG 7844 with axes specified in degrees.
+#' `crs_gda2020_cartesian` is EPSG 7842 with Cartesian axes in metres.
+#' `crs_gda2020_albers` is EPSG 9473, the Albers equal area projection used for
+#' area computation.
+#'
 #' @return A simple features CRS
 #'
 #' @export
 crs_gda2020 <- function() {
   sf::st_crs("EPSG:7844")
+}
+#' @rdname crs_gda2020
+#' @export
+crs_gda2020_cartesian <- function() {
+  sf::st_crs("EPSG:7842")
+}
+#' @rdname crs_gda2020
+#' @export
+crs_gda2020_albers <- function() {
+  sf::st_crs("EPSG:9473")
+}
+
+#' New South Wales outline with or without related territories
+#'
+#' The default outline `nswgeo::nsw` includes Jervis Bay Territory, excludes
+#' Lord Howe Island, and does not have a cut out for the ACT. This utility
+#' allows each of these to be adjusted.
+#'
+#' @seealso [nsw]
+#'
+#' @param lord_howe_island Include Lord Howe Island.
+#' @param act_cutout Cut out the area of the Australian Capital Territory.
+#' @param jervis_bay Cover the area of the Jervis Bay Territory.
+#'
+#' @return A simple features data frame with the requested geometries.
+#' @export
+#'
+#' @examples
+#' library(ggplot2)
+#'
+#' outline(lord_howe_island = TRUE) |> ggplot() + geom_sf()
+outline <- function(lord_howe_island = FALSE, act_cutout = FALSE, jervis_bay = TRUE) {
+  base <- nswgeo::nsw
+  crs_working <- sf::st_crs("+proj=eqc +lat_ts=34 units=m")
+  crs_nsw <- sf::st_crs(nswgeo::nsw)
+
+  if (act_cutout) {
+    base <- base |>
+      sf::st_transform(crs_working) |>
+      sf::st_difference(nswgeo::act) |>
+      sf::st_transform(crs_nsw)
+  }
+
+  if (!jervis_bay) {
+    # Since the default includes JBT and is simplified (reduced resolution), the
+    # shape of JBT needs to be enlarged a bit to avoid leaving odd pieces of
+    # geometry behind when intersecting.
+    jbt <- nswgeo::jbt |>
+      sf::st_transform(crs_working) |>
+      sf::st_simplify(dTolerance = 750L) |>
+      sf::st_buffer(250L)
+    base <- base |>
+      sf::st_transform(crs_working) |>
+      sf::st_difference(jbt) |>
+      sf::st_transform(crs_nsw) |>
+      sf::st_make_valid()
+  }
+
+  if (lord_howe_island) {
+    sf::st_sf(geometry = rbind(base, nswgeo::lhi), name = c("NSW", "Lord Howe Island"))
+  } else {
+    sf::st_sf(geometry = base, name = "NSW")
+  }
 }
