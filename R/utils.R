@@ -23,8 +23,11 @@
 #' @examples
 #' normalise_state_names(c("nsw", "VIC", "overseas", "Queensland"))
 normalise_state_names <- function(names) {
-  cartographer::resolve_feature_names(names, feature_type = "nswgeo.states",
-                                      unmatched = "pass")
+  cartographer::resolve_feature_names(
+    names,
+    feature_type = "nswgeo.states",
+    unmatched = "pass"
+  )
 }
 
 #' Normalise postal codes
@@ -60,9 +63,11 @@ normalise_postcodes <- function(codes) {
 #' Geospatial data in this package uses GDA2020.
 #'
 #' `crs_gda2020` is EPSG 7844 with axes specified in degrees.
+#'
 #' `crs_gda2020_cartesian` is EPSG 7842 with Cartesian axes in metres.
-#' `crs_gda2020_albers` is EPSG 9473, the Albers equal area projection used for
-#' area computation.
+#'
+#' `crs_gda2020_albers` is EPSG 9473, the Albers equal area projection used,
+#'   making it suitable for area computation.
 #'
 #' @return A simple features CRS
 #'
@@ -106,9 +111,10 @@ outline <- function(lord_howe_island = FALSE, act_cutout = FALSE, jervis_bay = T
   crs_nsw <- sf::st_crs(nswgeo::nsw)
 
   if (act_cutout) {
+    act <- sf::st_transform(nswgeo::act, crs_working)
     base <- base |>
       sf::st_transform(crs_working) |>
-      sf::st_difference(nswgeo::act) |>
+      sf::st_difference(act) |>
       sf::st_transform(crs_nsw)
   }
 

@@ -11,8 +11,8 @@ An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{dat
 An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 644 rows and 7 columns.
 }
 \source{
-Australian Bureau of Statistics. "Australian Statistical Geography Standard (ASGS) Edition 3." ABS, Jul2021-Jun2026,
-\url{https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026}, accessed 27 September 2022.
+Australian Bureau of Statistics. "Australian Statistical Geography Standard (ASGS) Edition 3." ABS, Jul2021-Jun2026 (24 July 2024 update),
+\url{https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026}, accessed 29 July 2024.
 
 The original dataset is published under the \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International} licence, © Commonwealth of Australia 2021.
 }
@@ -40,10 +40,11 @@ level of detail.
 }}
 \examples{
 library(ggplot2)
-ggplot(lga_nsw) + geom_sf(aes(fill = LGA_NAME_2023), show.legend = FALSE)
+ggplot(lga_nsw) + geom_sf(aes(fill = LGA_NAME_2024), show.legend = FALSE)
 
 library(sf)
 sf_use_s2(FALSE)
+
 # cut out part of the postcode dataset (it's quite large)
 bbox <- st_bbox(c(xmin = 142, xmax = 147, ymin = -33, ymax = -30)) |>
  st_as_sfc(crs = crs_gda2020())
@@ -51,5 +52,15 @@ st_crop(poa_nsw, bbox) |>
   ggplot() +
   geom_sf() +
   geom_sf_text(aes(label = POA_CODE_2021), size = 4)
+
+# some postcodes extend past the state boundary
+ggplot(nswgeo::poa_nsw) +
+  geom_sf(aes(fill = as.integer(POA_NAME_2021)), colour = NA) +
+  geom_sf(fill = NA, colour = "red", linewidth = .5, data = nswgeo::nsw) +
+  scale_fill_viridis_b("Postal area", option = "H") +
+  theme_void()
+}
+\seealso{
+\link{poa_lhd_concordance}
 }
 \keyword{datasets}
